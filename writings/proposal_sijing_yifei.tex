@@ -1,0 +1,136 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+% \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading nips_2016
+%
+% to avoid loading the natbib package, add option nonatbib:
+% \usepackage[nonatbib]{nips_2016}
+\def\cD{\mathcal D}
+\def\cH{\mathcal H}
+\def\bx{\bm{x}}
+\def\by{\bm{y}}
+\def\bw{\bm{w}}
+\def\bu{\bm{u}}
+\def\expect{\mathbb E}
+\def\real{\mathbb R}
+
+
+\usepackage[final]{nips_2016}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+% \usepackage[final]{nips_2016}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+
+\title{What is the best output of an algorithm?}
+
+% The \author macro works with any number of authors. There are two
+% commands used to separate the names and addresses of multiple
+% authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to
+% break the lines. Using \AND forces a line break at that point. So,
+% if LaTeX puts 3 of 4 authors names on the first line, and the last
+% on the second line, try using \AND instead of \And before the third
+% author name.
+
+\author{
+  Yifei Liu \\ %\thanks{Use footnote for providing further information about author (webpage, alternative address)---\emph{not} for acknowledging funding agencies.}\\
+  Department of Statistics\\
+  University of Wisconsin-Madison\\
+  Madison, WI 53706 \\
+  \texttt{yifeiliu@stat.wisc.edu} \\
+  %% examples of more authors
+ \And
+ Sijing Li \\
+ Department of Statistics \\
+ University of Wisconsin-Madison\\
+ Madison, WI 53706 \\
+ \texttt{sijingli@stat.wisc.edu} \\
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+}
+
+\begin{document}
+% \nipsfinalcopy is no longer used
+
+\maketitle
+
+\section{Introduction}
+Thoughout the course we encountered numerous descent algorithms, and proved various convergence theorems under different assumptions such as Lipschitzness, strong convexity and smoothness on the loss function. However, the output used in the proofs of theorems sometimes differs a lot. For example, in Lecture 5, we showed that for convex and $L$-Lipschitz loss funtion $f$, the convergence rate of gradient descent algorithm is given by
+\begin{equation}
+  \label{eq:lipschtz}
+  f\bigg(\frac{1}{T}\sum_{k=1}^T x_k\bigg) - f^* \leq \frac{\Delta_1 L}{\sqrt{T}}.
+\end{equation}
+Here, $T$ is the total number of iterations, $\{x_k\}_{k=1}^T$ is the sequence of outputs along the optimization path, $f*$ is the minimal function value, and $\Delta_1$ is the distance between the initial point $x_1$ and the optimal point $x^*$. For $\lambda$-strongly convex and $\beta$-smooth loss function, we have the following convergence result
+\begin{equation}
+  \label{eq:strcvx_smooth}
+  f(x_{T+1}) - f^* \leq \frac{\beta}{2}\exp\bigg(\frac{-T}{\kappa}\bigg)\Delta_1^2,
+\end{equation}
+where $\kappa = \beta / \lambda$ is the condition number. For $\lambda$-strongly convex and $L$-Lipschitz function, \cite{bubeck2014convex} proves that the projected subgradient descent have the following convergence rate
+\begin{equation}
+  \label{eq:strcvx_lipschitz}
+  f(\sum_{k=1}^T \frac{2k}{T(T+1)} x_k) - f^* \leq \frac{2 L^2}{\lambda (T+1)}.
+\end{equation}
+From the above three examples we can see that when deriving the upper bound of an algorithm, differen kinds of output are used. And it's often \textit{ad hoc} and tricky to pick the appropriate outputs to go through the proofs. This motivates us to find a general principle that can give a guideline on what output to use for loss functions satisfying different assumptions, and / or for different algorithms. A counterpart of this problem is that when people use a parallelized algorithm on, say, $q$ machines and a sequence of length-$q$ outputs are returned in total, then what will be the optimal way to combine these outputs to yield the best output. We formalize these problems in the following section.
+
+\section{Problem formulation}
+\label{sec:problem_formulation}
+We state these problems as two versions of problem, the single-machine problem and the multiple-machine problem. For simplicity, we consider here the unconstrained convex optimization problem, namely,
+\begin{equation}
+  \label{eq:optimization}
+\mbox{ minimize } f(x),
+\end{equation}
+where $x \in \real^{d}$.
+
+\subsection{Single machine problem}
+Consider a general descent algorithm implemented by a single machine, where the update is given by
+\[
+  x_{k+1} = x_k - \gamma \alpha_k.
+\]
+Here $\alpha_k$ is the descent direction in each step. For example, $\alpha_k = \nabla f(x_k)$ correspondes to the gradient descent algorithm. And $\gamma$ is the stepsize. Suppose we iterate $T$ times and collect $\{x_k\}_{k=1}^T$. We aim to find diagonal matrices $\{\hat D_k\}_{k=1}^T$ such that $\{\hat D_k\}$ minimizes
+\begin{equation}
+  \label{eq:obj1}
+  f(\sum_{k=1}^T D_k x_k),
+\end{equation}
+w.r.t. $\{D_k\}$, where $D_k = \mbox{diag}\{d^{(k)}_{11}, \cdots, d^{k}_{dd}\}$.
+
+Notice that the above form allows us to perform not only linear combinations of the original outputs $\{x_k\}$ but also scaling them differently in different coordinates. Hence with this formulation, we can potentially get a final output whose objective function value is smaller than $min_k f(x_k)$!
+
+\subsection{Multiple machine problem}
+Now let's assume we have $q$ machines in total, and each machine $i$ runs an algorithm $A$ and returns an output $x_i$. Now we would like to find $\{ \hat D_i\}_{i=1}^q$ to minimize
+\begin{equation}
+  \label{eq:obj2}
+  f(\sum_{i=1}^q D_i x_i),
+\end{equation}
+w.r.t. $\{D_i\}$, where $D_i = \mbox{diag}\{d^{(i)}_{11}, \cdots, d^{i}_{dd}\}$.
+
+\section{Potential approaches and directions}
+\label{sec:potential_direct}
+First of all we would like to approach these two questions from a theoretical point of view. We want to see whether the solutions of (\ref{eq:obj1}) and (\ref{eq:obj2}) are related to the structure (such as Lipschitzness, smoothness) of the loss fuction. Then we will try to solve these two problems with certain algorithm and see whether we can solve them efficiently. Notice that the size of the problems are closely related to the numbers of iterations $T$ or the number of machines $q$, we would like to see numerically how the values of $T$ or $q$ will affects the results.
+
+\bibliographystyle{te}
+\bibliography{proposal_sijing_yifei}
+\end{document}

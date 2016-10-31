@@ -1,0 +1,14 @@
+*.log
+*.aux
+*~
+.Rhistory
+.Rproj.user
+*.Rproj
+*.RData
+*.html
+*.gz
+#*#
+*.out
+*.err
+*.Rout
+.DS_Store
